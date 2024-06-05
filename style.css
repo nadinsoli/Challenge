@@ -407,6 +407,21 @@ body {
   }
 }
 
+@media (min-width: 376px) and (max-width: 900px){
+  body {
+    padding: 5vh;
+    margin: 0;
+  }
+  .container {
+    max-width: 100%;
+    padding: 30px 30px;
+    margin: 30px 10px
+  }
+  .notification {
+    padding: 5px;
+  }
+}
+
 @media (min-width: 376px) and (max-width: 1440px) {
   .container {
       max-width: 80%;
