@@ -1,3 +1,4 @@
+
 const notifications = [
   {
     id: 1,
@@ -84,31 +85,24 @@ const notifications = [
   },
 ];
 
-$(document).ready(function() {
-  function updateBadge() {
-    var unreadCount = $('.notification.unread').length;
-    if (unreadCount > 0) {
-      $('.badge').text(unreadCount).show();
-    } else {
-      $('.badge').hide();
-    }
+const notificationList = $('#notification-list');
+const modal = $('#userProfileModal');
+
+function updateBadge() {
+  const unreadCount = notifications.filter(n => n.unread).length;
+  if (unreadCount > 0) {
+    $('.badge').text(unreadCount).show();
+  } else {
+    $('.badge').hide();
   }
+}
 
-  function updateNotificationArray(id, unread) {
-    const notification = notifications.find(n => n.id === id);
-    if (notification) {
-      notification.unread = unread;
-    }
-  }
-
-  const notificationList = document.getElementById('notification-list');
-  const modalList = document.getElementById('modal-list');
-
+function renderNotifications() {
+  notificationList.empty();
   notifications.forEach(notification => {
-    // Notification HTML
     const notificationHTML = `
       <div class="notification ${notification.unread ? 'unread' : 'read'}" data-id="${notification.id}">
-        <a href="#" class="openModalButton${notification.id} openModal" data-toggle="modal" data-target="#userProfileModal${notification.id}">
+        <a href="#" class="openModalButton openModal" data-bs-toggle="modal" data-bs-target="#userProfileModal" data-id="${notification.id}">
           <img class="profile-pic" src="${notification.profilePic}" alt="profile-pic">
         </a>
         <div class="content">
@@ -124,71 +118,57 @@ $(document).ready(function() {
         </svg>
       </div>
     `;
-    notificationList.insertAdjacentHTML('beforeend', notificationHTML);
-
-    // Modal HTML
-    const modalHTML = `
-      <div class="modal fade" id="userProfileModal${notification.id}" tabindex="-1" aria-labelledby="userProfileModalLabel${notification.id}" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="userProfileModalLabel${notification.id}">${notification.name}</h5>
-            </div>
-            <div class="modal-body">
-              <div class="user-image text-center">
-                <img src="${notification.profilePic}" alt="User Profile Picture" class="img-fluid">
-              </div>
-              <div class="user-info mt-3">
-                <p><strong>Followers:</strong> ${notification.followers}</p>
-                <p><strong>Following:</strong> ${notification.following}</p>
-                <p><strong>Posts:</strong> ${notification.posts}</p>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-primary follow-button" id="followButton${notification.id}" data-following="false">Follow</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    modalList.insertAdjacentHTML('beforeend', modalHTML);
+    notificationList.append(notificationHTML);
   });
+}
 
+
+$(document).on('click', '.openModal', function() {
+  const notificationId = $(this).data('id');
+  const notification = notifications.find(n => n.id == notificationId);
+  if (notification) {
+    $('#userProfileModalLabel').text(notification.name);
+    $('#userProfileModal .user-image img').attr('src', notification.profilePic);
+    $('#userProfileModal .user-info').html(`
+      <p><strong>Followers:</strong> ${notification.followers}</p>
+      <p><strong>Following:</strong> ${notification.following}</p>
+      <p><strong>Posts:</strong> ${notification.posts}</p>
+    `);
+  }
+});
+
+
+$(document).on('click', '.seen-icon', function() {
+  const notificationId = $(this).closest('.notification').data('id');
+  const notification = notifications.find(n => n.id == notificationId);
+  if (notification) {
+    notification.unread = !notification.unread; 
+    renderNotifications(); 
+    updateBadge();
+  }
+});
+
+
+$('.readBtn').click(function() {
+  notifications.forEach(notification => notification.unread = false);
+  renderNotifications();
   updateBadge();
+});
 
-  $('#notification-list').on('click', '.seen-icon', function() {
-    var notification = $(this).closest('.notification');
-    var id = parseInt(notification.data('id'), 10);
-    notification.toggleClass('unread read');
-    updateNotificationArray(id, notification.hasClass('unread'));
-    updateBadge();
-  });
 
-  $('.readBtn').click(function() {
-    $('.notification').removeClass('unread').addClass('read');
-    notifications.forEach(notification => {
-      notification.unread = false;
-    });
-    updateBadge();
-  });
+$(document).ready(function() {
+  renderNotifications();
+  updateBadge();
+});
 
-  document.addEventListener('click', function(event) {
-    const modalDialog = document.querySelector('.modal-dialog');
-    if (modalDialog && !modalDialog.contains(event.target)) {
-      $('.modal').modal('hide');
-    }
-  });
 
-  document.querySelectorAll('.follow-button').forEach(button => {
-    button.addEventListener('click', function() {
-      const following = this.getAttribute('data-following');
-      if (following === 'false') {
-        this.textContent = 'Unfollow';
-        this.setAttribute('data-following', 'true');
-      } else {
-        this.textContent = 'Follow';
-        this.setAttribute('data-following', 'false');
-      }
-    });
-  });
+$(document).on('click', '.follow-button', function() {
+  const following = $(this).attr('data-following');
+  if (following === 'false') {
+    $(this).text('Unfollow');
+    $(this).attr('data-following', 'true');
+  } else {
+    $(this).text('Follow');
+    $(this).attr('data-following', 'false');
+  }
 });
